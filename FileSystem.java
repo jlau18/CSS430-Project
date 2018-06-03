@@ -8,10 +8,10 @@ public class FileSystem {
     private FileTable filetable;
 
 
-    public FileSystem (int blocks)
+    public FileSystem (int totalBlocks)
     {
-        superblock = new SuperBlock(blocks);
-        directory = new Directory(superblock.inodeBlocks);
+        superblock = new SuperBlock(totalBlocks);
+        directory = new Directory(superblock.totalInodes);
         filetable = new FileTable(directory);
 
         // read the "/" file from disk
@@ -30,7 +30,7 @@ public class FileSystem {
 
 
     public int format( int files){
-        superblock.format(files);
+        superblock.reformat(files);
         directory = new Directory(files);
         filetable = new FileTable(directory);
         return 0;
@@ -47,7 +47,7 @@ public class FileSystem {
         return fileTableEntry;
     }
 
-
+	//our close right now is passing in an int, need to change here or in kernel
     public int close(FileTableEntry fd){
 
         synchronized(fd) {
@@ -129,7 +129,7 @@ public class FileSystem {
         }
     }
 
-
+	//inode isn't global, need to add it here somehow
     public int write(FileTableEntry fd, byte[] buffer){
         if (fd == null || fd.mode == "r")
         {
@@ -158,10 +158,10 @@ public class FileSystem {
                     byte[] tempBlock = new byte[Disk.blockSize];
                     short inodeOffset;
                     while (bytesWritten < buffer.length) {
-                        inodeOffset = (short)fd.seekPtr/ Disk.blockSize;
-                        if (inodeOffset >= Inode.directSize - 1 &&
+                        inodeOffset = (short)(fd.seekPtr/ Disk.blockSize);
+                        if (inodeOffset >= Inode.numDirectPointers() - 1 &&
                                 fd.inode.getIndexBlockNumber() <= 0) {
-                            short indexBlock = superblock.getFreeBlock();
+                            short indexBlock = (short)superblock.nextFreeBlock();
                             if (indexBlock == -1) {
                                 return -1;
                             }
@@ -175,7 +175,7 @@ public class FileSystem {
                         if (blockNum == -1 || (bytesWritten % Disk.blockSize >
                                 0 && bytesLeft > 0)) {
 
-                            blockNum = superblock.getFreeBlock();
+                            blockNum = (short)superblock.nextFreeBlock();
 
                             if (blockNum == -1) { // no space
                                 return -1;
@@ -191,7 +191,7 @@ public class FileSystem {
                         SysLib.rawread(blockNum, tempBlock);
 
                          int bytesToWrite;
-                         if((bytesLeft < (Disk.blockSize - blockOffset)){
+                         if(bytesLeft < (Disk.blockSize - blockOffset)){
                             bytesToWrite = bytesLeft;
                          }
                          else{
@@ -258,18 +258,18 @@ public class FileSystem {
 
     private boolean deallocateBlocks(FileTableEntry fd){
         short invalid = -1;
-        if (fd.node.count != 1)
+        if (fd.inode.count != 1)
         {
             SysLib.cerr("Null Pointer");
             return false;
         }
 
         for (short blockId = 0;
-             blockId < fd.node.directSize; blockId++)
+             blockId < Inode.numDirectPointers(); blockId++)
         {
             if (fd.inode.direct[blockId] != invalid)
             {
-                superblock.returnBlock(blockId);
+                superblock.freeUpBlock(blockId);
                 fd.inode.direct[blockId] = invalid;
             }
         }
@@ -281,7 +281,7 @@ public class FileSystem {
             short blockId;
             while((blockId = SysLib.bytes2short(data, 0)) != invalid)
             {
-                superblock.returnBlock(blockId);
+                superblock.freeUpBlock(blockId);
             }
         }
         fd.inode.toDisk(fd.iNumber);
@@ -290,8 +290,8 @@ public class FileSystem {
 
 
     public int delete(String filename) {
-        FileTableEntry tcb = open(filename, "w");)
-        if (directory.ifree(tcb.iNumber) && close(tcb)) {
+        FileTableEntry tcb = open(filename, "w");
+        if (directory.ifree(tcb.iNumber) && (close(tcb) == 0)) {
             return 0;
         } else {
             return -1;
@@ -313,6 +313,5 @@ public class FileSystem {
         FileTableEntry root = open("/", "w");
         write(root, directory.directory2bytes());
         close(root);
-        superblock.sync();
     }
 }

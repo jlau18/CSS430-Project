@@ -23,7 +23,7 @@ public class FileTable {
             else { iNumber = dir.namei(filename); }
 
             // if inode exist
-            if(iNumber >= 0){
+            if(iNumber >= 0 && iNumber < dir.maxFiles()){
                 inode = new Inode(iNumber);
 
                 if(mode.equals("r")){ // read only
@@ -39,8 +39,8 @@ public class FileTable {
                     }
                 }
                 else{  // writing or writing/reading or append
-                    if(inode.flag == used || inode.flas == unused){
-                        inode.flag == write;
+                    if(inode.flag == used || inode.flag == unused){
+                        inode.flag = write;
                         break;
                     }
                     else{
@@ -77,7 +77,7 @@ public class FileTable {
                 }
             }
             else if(inode.flag == write){
-                inode.flag == used;
+                inode.flag = used;
                 notifyAll();
             }
 
