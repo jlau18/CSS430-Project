@@ -80,7 +80,7 @@ public class FileSystem {
                     byte[] tempBlock = new byte[Disk.blockSize];
                     int buffersize = 0;
                     while (bytesRead < buffer.length) {
-                        int blockNum = inode.findTargetBlock(
+                        int blockNum = fd.inode.findTargetBlock(
                                 (short)fd.seekPtr/ Disk.blockSize);
 
                         if (blockNum == -1) {
@@ -129,14 +129,14 @@ public class FileSystem {
         }
     }
 
-	//inode isn't global, need to add it here somehow
+
     public int write(FileTableEntry fd, byte[] buffer){
         if (fd == null || fd.mode == "r")
         {
             return -1;
         }
 
-        short blockNum = inode.findTargetBlock(
+        short blockNum = fd.inode.findTargetBlock(
                 (short)fd.seekPtr/ Disk.blockSize);
         int bytesWritten = 0;
         int blockOffset = fd.seekPtr % Disk.blockSize;
