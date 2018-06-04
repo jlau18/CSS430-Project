@@ -99,7 +99,7 @@ public class Inode {
 		return indirect;
 	}
 	
-	boolean setNextBlocknumber(short blockNum) {
+	boolean setNextBlockNumber(short blockNum) {
 		for (int i = 0; i < directSize; i++) {
 			if (direct[i] == -1) {
 				direct[i] = blockNum;
@@ -115,7 +115,7 @@ public class Inode {
 		for (int i = 0; i < blockSize / 2; i++) {
 			short validCheck = SysLib.bytes2short(indirectBlock, 2 * i);
 			if (validCheck == -1) {
-				target = 2 * i;
+				target = (short) (2 * i);
 				break;
 			}
 		}
