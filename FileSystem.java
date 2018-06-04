@@ -41,7 +41,6 @@ public class FileSystem {
         FileTableEntry fileTableEntry = filetable.falloc(fileName, mode);
         if (mode.equals("w")) // writing mode
         {
-            System.out.println("open with w");
             if ( deallocateBlocks( fileTableEntry ) == false)
                 return null;
         }
@@ -55,9 +54,7 @@ public class FileSystem {
         synchronized(fd) {
             if(fd.count > 0) fd.count--;
 
-            System.out.println("count " + fd.count);
             if (fd.count == 0) {
-                fd.inode.flag = Inode.USED;
                 fd.inode.toDisk(fd.iNumber);
                 if(filetable.ffree(fd)){
                     return 0;
@@ -78,7 +75,7 @@ public class FileSystem {
                     try { wait(); }
                     catch (InterruptedException e) {}
                     break;
-                case Inode.DELETE:
+                case Inode.USED:
                     return -1;
                 default:
                     fd.inode.flag = Inode.READ;
@@ -138,7 +135,6 @@ public class FileSystem {
         {
             return -1;
         }
-
         short blockNum = (short)fd.inode.findTargetBlock(fd.seekPtr/ Disk.blockSize);
         int bytesWritten = 0;
         int blockOffset = fd.seekPtr % Disk.blockSize;
@@ -150,10 +146,10 @@ public class FileSystem {
                         try { wait(); }
                         catch (InterruptedException e){}
                     } else {
-                        fd.inode.flag = Inode.USED;
+                        fd.inode.flag = Inode.UNUSED;
                     }
                     break;
-                case Inode.DELETE:
+                case Inode.USED:
                     return -1;
                 default:
                     fd.inode.flag = Inode.WRITE;
@@ -263,7 +259,6 @@ public class FileSystem {
             SysLib.cerr("Null Pointer");
             return false;
         }
-        System.out.println("for loop start");
         for (short blockId = 0;
              blockId < Inode.numDirectPointers(); blockId++)
         {
@@ -273,7 +268,6 @@ public class FileSystem {
                 fd.inode.direct[blockId] = invalid;
             }
         }
-        System.out.println("");
         byte [] data = fd.inode.freeIndirectBlock();
 
         if (data != null)

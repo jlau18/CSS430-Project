@@ -9,7 +9,6 @@ public class Inode {
 	public final static int USED = 1;
 	public final static int READ = 2;
 	public final static int WRITE = 3;
-	public final static int DELETE = 4;
 
 	public int length;                             // file size in bytes	
 	public short count;                            // # file-table entries pointing to this

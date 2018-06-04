@@ -130,24 +130,19 @@ class Test5 extends Thread {
     SysLib.cout( "5: reopen and read from \"css430\".." );
     fd = SysLib.open( "css430", "r" );
 
-    System.out.println("open finish");
-
     byte[] tmpBuf = new byte[16];
     size = SysLib.read( fd, tmpBuf );
-    System.out.println("read finish");
     if ( size != 16 ) {
       SysLib.cout( "size = " + size + " (wrong)\n" );
       SysLib.close( fd );
       return false;
     }
-    System.out.println("for loop start");
     for ( int i = 0; i < 16; i++ )
       if ( tmpBuf[i] != buf16[i] ) {
         SysLib.cout( "buf[" + i + "] = " + tmpBuf[i] + " (wrong)\n" );
         SysLib.close( fd );
         return false;
       }
-    System.out.println("for loop end");
     SysLib.close( fd );
     SysLib.cout( "successfully completed\n" );
     return true;
