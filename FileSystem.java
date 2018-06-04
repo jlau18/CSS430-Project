@@ -80,8 +80,7 @@ public class FileSystem {
                     byte[] tempBlock = new byte[Disk.blockSize];
                     int buffersize = 0;
                     while (bytesRead < buffer.length) {
-                        int blockNum = inode.findTargetBlock(
-                                (short)fd.seekPtr/ Disk.blockSize);
+                        int blockNum = inode.findTargetBlock(fd.seekPtr/ Disk.blockSize);
 
                         if (blockNum == -1) {
                             return -1;
@@ -181,7 +180,7 @@ public class FileSystem {
                                 return -1;
                             }
 
-                            if (fd.inode.setNextBlockNumber(blockNum) == false){
+                            if (!fd.inode.setNextBlockNumber(blockNum)){
                                 return -1;
                             }
 
