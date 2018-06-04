@@ -71,19 +71,18 @@ public class FileSystem {
         int readLength = 0;
         while (true) {
             switch(fd.inode.flag) {
-                case Inode.WRITE:
-                    try { wait(); }
-                    catch (InterruptedException e) {}
-                    break;
                 case Inode.USED:
                     return -1;
+                case Inode.WRITE:
                 default:
                     fd.inode.flag = Inode.READ;
                     byte[] tempBlock = new byte[Disk.blockSize];
                     int buffersize = 0;
-                    while (bytesRead < buffer.length) {
-                        int blockNum = fd.inode.findTargetBlock(fd.seekPtr/ Disk.blockSize);
+                    int tempBuffer = 0;
 
+                    while (bytesRead < buffer.length) {
+                        int blockNum = fd.inode.findTargetBlock(
+                                fd.seekPtr/ Disk.blockSize);
 
                         if (blockNum == -1) {
                             return -1;
@@ -92,28 +91,33 @@ public class FileSystem {
                             return -1;
                         }
 
-                        boolean lastBlock = (
-                                (fd.inode.length - fd.seekPtr) < Disk.blockSize)
-                                || ((fd.inode.length - fd.seekPtr) ==0);
+                        boolean lastBlock = ((
+                                buffer.length - tempBuffer) < Disk.blockSize);
 
                         if(lastBlock){
-                            readLength = (fd.inode.length - fd.seekPtr);
+                            readLength = (buffer.length - tempBuffer);
                         }
                         else{
                             readLength = Disk.blockSize;
                         }
 
-                        if (buffer.length < (512 - fd.seekPtr)){
+                        if (readLength < 512){
                             System.arraycopy(tempBlock, fd.seekPtr,
-                                    buffer, 0,buffer.length);
+                                    buffer, tempBuffer,readLength);
                             bytesRead = buffer.length;
                         }
                         else{  // data in multiple blocks
-                            System.arraycopy(tempBlock, 0,
-                                    buffer, buffersize, readLength);
+                            System.out.println("tempBuffer " + tempBuffer);
+                            System.out.println("readLength " + readLength);
+                            System.out.println("tempBlock " + tempBlock.length);
+                            System.out.println("BufferLength " + buffer.length);
+                            System.arraycopy(tempBlock, fd.seekPtr,
+                                    buffer, tempBuffer, readLength);
                             bytesRead += readLength;
+
                         }
                         buffersize = buffersize + readLength - 1;
+                        tempBuffer += readLength;
                         seek(fd, readLength, SEEK_CUR);
                     }
 
@@ -124,6 +128,7 @@ public class FileSystem {
                     if (fd.count > 0) {
                         notify();
                     }
+                    System.out.println("bytesRead " + bytesRead);
                     return bytesRead;
             }
         }
@@ -169,7 +174,7 @@ public class FileSystem {
                         }
                         int bytesLeft = buffer.length - bytesWritten;
 
-                        // not available yet
+                        // block not available yet
                         if (blockNum == -1 || (bytesWritten % Disk.blockSize >
                                 0 && bytesLeft > 0)) {
 
@@ -178,7 +183,7 @@ public class FileSystem {
                             if (blockNum == -1) { // no space
                                 return -1;
                             }
-
+                            //sets new block so it knows where rest of file goes
                             if (!fd.inode.setNextBlockNumber(blockNum)){
                                 return -1;
                             }

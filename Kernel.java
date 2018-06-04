@@ -197,7 +197,6 @@ public class Kernel
                case OPEN:    // to be implemented in project
 				  if ((myTcb = scheduler.getMyTcb()) != null) {
 					  String[] s = (String[]) args;
-                      System.out.println("fs.open");
 					  return myTcb.getFd( fs.open(s[0], s[1]));
 				  }	 else {
 					  return ERROR;
