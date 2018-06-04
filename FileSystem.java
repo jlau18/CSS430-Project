@@ -77,7 +77,6 @@ public class FileSystem {
                 default:
                     fd.inode.flag = Inode.READ;
                     byte[] tempBlock = new byte[Disk.blockSize];
-                    int buffersize = 0;
                     int tempBuffer = 0;
 
                     while (bytesRead < buffer.length) {
@@ -101,18 +100,23 @@ public class FileSystem {
                             readLength = Disk.blockSize;
                         }
 
-                        if (readLength < 512){
+                        if (readLength < (512 - fd.seekPtr)){
                             System.arraycopy(tempBlock, fd.seekPtr,
                                     buffer, tempBuffer,readLength);
                             bytesRead = buffer.length;
                         }
                         else{  // data in multiple blocks
-                            System.arraycopy(tempBlock, fd.seekPtr,
+                            System.out.println("seekPtr " + fd.seekPtr);
+                            System.out.println("tempBuffer " + tempBuffer);
+                            System.out.println("readLength " + readLength);
+                            System.out.println("tempBlock " + tempBlock.length);
+                            System.out.println("BufferLength " + buffer.length);
+
+                            System.arraycopy(tempBlock, fd.seekPtr%512,
                                     buffer, tempBuffer, readLength);
                             bytesRead += readLength;
 
                         }
-                        buffersize = buffersize + readLength - 1;
                         tempBuffer += readLength;
                     }
 
@@ -152,10 +156,9 @@ public class FileSystem {
                     return -1;
                 default:
                     fd.inode.flag = Inode.WRITE;
-                    byte[] tempBlock = new byte[Disk.blockSize];
-                    short inodeOffset;
+                    short inodeOffset = (short)(fd.seekPtr/ Disk.blockSize);
                     while (bytesWritten < buffer.length) {
-                        inodeOffset = (short)(fd.seekPtr/ Disk.blockSize);
+                        byte[] tempBlock = new byte[Disk.blockSize];
                         if (inodeOffset >= Inode.numDirectPointers() - 1 &&
                                 fd.inode.getIndexBlockNumber() <= 0) {
                             short indexBlock = (short)superblock.nextFreeBlock();

@@ -29,7 +29,6 @@ public class FileTable {
                     if(inode.flag == used || inode.flag == unused
                             || inode.flag == read){
                         inode.flag = read;
-                        inode.seekPtr = 0;
                         break;
                     }
                     else if(inode.flag == write){
@@ -40,14 +39,12 @@ public class FileTable {
                 }
                 else{  // writing or writing/reading or append
                     if(inode.flag == used || inode.flag == unused){
-                        inode.seekPtr = 0;
                         inode.flag = write;
                         break;
                     }
                     else{
                         try{ wait(); }
                         catch(InterruptedException e){ }
-                        inode.seekPtr = 0;
                         inode.flag = used;
                         //break;
                     }
@@ -58,7 +55,6 @@ public class FileTable {
                 iNumber = dir.ialloc(filename);
                 inode = new Inode(iNumber);
                 inode.flag = write;
-                inode.seekPtr = 0;
                 break;
             }
             else return null;
