@@ -66,6 +66,7 @@ public class Inode {
 		SysLib.short2bytes(indirect, iNodeData, offset);
 		
 		SysLib.rawwrite(blockNum, iNodeData);
+		return 0;
 	}
 	
 	public static int numDirectPointers() {
