@@ -15,17 +15,17 @@ public class FileSystem {
         filetable = new FileTable(directory);
 
         // read the "/" file from disk
-        FileTableEntry directoryEntry = open("/", "r");
-        int directorySize = fsize( directoryEntry);
+        FileTableEntry dirEntry = open("/", "r");
+        int directorySize = fsize( dirEntry);
         if (directorySize > 0)
         {
             // There is already data in the directory
             // We must read, and copy it to fsDirectory
             byte[] directoryData = new byte[directorySize];
-            read(directoryEntry, directoryData);
+            read(dirEntry, directoryData);
             directory.bytes2directory(directoryData);
         }
-        close(directoryEntry);
+        close(dirEntry);
     }
 
 
@@ -41,6 +41,7 @@ public class FileSystem {
         FileTableEntry fileTableEntry = filetable.falloc(fileName, mode);
         if (mode.equals("w")) // writing mode
         {
+            System.out.println("open with w");
             if ( deallocateBlocks( fileTableEntry ) == false)
                 return null;
         }
@@ -49,11 +50,15 @@ public class FileSystem {
 
 	//our close right now is passing in an int, need to change here or in kernel
     public int close(FileTableEntry fd){
+        if(fd == null) return -1;
 
         synchronized(fd) {
-            fd.count--;
+            if(fd.count > 0) fd.count--;
 
+            System.out.println("count " + fd.count);
             if (fd.count == 0) {
+                fd.inode.flag = Inode.USED;
+                fd.inode.toDisk(fd.iNumber);
                 if(filetable.ffree(fd)){
                     return 0;
                 }
@@ -120,9 +125,7 @@ public class FileSystem {
                     }
 
                     if (fd.count > 0) {
-                        notifyAll();
-                    } else {
-                        fd.inode.flag = Inode.USED;
+                        notify();
                     }
                     return bytesRead;
             }
@@ -214,8 +217,6 @@ public class FileSystem {
                     }
                     if (fd.count > 0) {
                         notifyAll();
-                    } else {
-                        fd.inode.flag = Inode.USED;
                     }
                     return bytesWritten;
             }
@@ -262,7 +263,7 @@ public class FileSystem {
             SysLib.cerr("Null Pointer");
             return false;
         }
-
+        System.out.println("for loop start");
         for (short blockId = 0;
              blockId < Inode.numDirectPointers(); blockId++)
         {
@@ -272,7 +273,7 @@ public class FileSystem {
                 fd.inode.direct[blockId] = invalid;
             }
         }
-
+        System.out.println("");
         byte [] data = fd.inode.freeIndirectBlock();
 
         if (data != null)

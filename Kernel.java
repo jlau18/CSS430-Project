@@ -84,7 +84,7 @@ public class Kernel
                   // instantiate synchronized queues
                   ioQueue = new SyncQueue( );
                   waitQueue = new SyncQueue( scheduler.getMaxThreads( ) );
-				  
+
 				  // instantiate file system
 				  fs = new FileSystem(1000);
 				  
@@ -176,11 +176,12 @@ public class Kernel
                         System.err.print( (String)args );
                         break;
                   }
-				  if ((myTcb = scheduler.getMyTcb()) != null) {
+				  if((myTcb = scheduler.getMyTcb()) != null){
 					  FileTableEntry ftEnt = myTcb.getFtEnt(param);
 					  if (ftEnt != null) {
 						  return fs.write(ftEnt, (byte[])args);
 					  }
+
 				  }
                   return ERROR;
                case CREAD:   // to be implemented in assignment 4
@@ -196,6 +197,7 @@ public class Kernel
                case OPEN:    // to be implemented in project
 				  if ((myTcb = scheduler.getMyTcb()) != null) {
 					  String[] s = (String[]) args;
+                      System.out.println("fs.open");
 					  return myTcb.getFd( fs.open(s[0], s[1]));
 				  }	 else {
 					  return ERROR;

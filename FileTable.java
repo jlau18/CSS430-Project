@@ -21,24 +21,30 @@ public class FileTable {
             // get inumber from inode
             if(filename.equals("/")){ iNumber = (short) 0; }
             else { iNumber = dir.namei(filename); }
-
+            System.out.println("iNumber set" + iNumber);
+            System.out.println("file name " + filename);
             // if inode exist
             if(iNumber >= 0 && iNumber < dir.maxFiles()){
                 inode = new Inode(iNumber);
 
                 if(mode.equals("r")){ // read only
-
+                    System.out.println("r mode");
+                    System.out.println("inode.flag = " + inode.flag);
                     if(inode.flag == used || inode.flag == unused
                             || inode.flag == read){
                         inode.flag = read;
                         break;
                     }
                     else if(inode.flag == write){
+                        System.out.println("in write");
                         try{ wait(); }
-                        catch(InterruptedException e){ }
+                        catch(InterruptedException e){ System.out.println("catching");}
+                        System.out.println("before break");
+                        break;
                     }
                 }
                 else{  // writing or writing/reading or append
+                    System.out.println("read and write");
                     if(inode.flag == used || inode.flag == unused){
                         inode.flag = write;
                         break;
@@ -46,6 +52,8 @@ public class FileTable {
                     else{
                         try{ wait(); }
                         catch(InterruptedException e){ }
+                        inode.flag = used;
+                        //break;
                     }
                 }
             }
@@ -53,7 +61,6 @@ public class FileTable {
                 // create new inode and get inumber
                 iNumber = dir.ialloc(filename);
                 inode = new Inode(iNumber);
-                inode.flag = write;
                 break;
             }
             else return null;
@@ -68,21 +75,24 @@ public class FileTable {
     }
 
     public synchronized boolean ffree( FileTableEntry e ) {
-        Inode inode = new Inode(e.iNumber);
+        System.out.println("ffree");
+        System.out.println("flag " + e.inode.flag);
         if(table.remove(e)){ // removes if in table
-            if(inode.flag == read){
-                if(inode.count == 1){
+            if(e.inode.flag == read){
+                System.out.println("ffree flag read");
+                if(e.inode.count == 1){
+                    e.inode.flag = used;
                     notify();
-                    inode.flag = used;
                 }
             }
-            else if(inode.flag == write){
-                inode.flag = used;
+            else if(e.inode.flag == write){
+                System.out.println("ffree flag write");
+                e.inode.flag = used;
                 notifyAll();
             }
 
-            inode.count -= 1; // decrease user count
-            inode.toDisk(e.iNumber); // saves to disk
+            e.inode.count -= 1; // decrease user count
+            e.inode.toDisk(e.iNumber); // saves to disk
             return true;
         }
         else return false;
