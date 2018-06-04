@@ -107,10 +107,6 @@ public class FileSystem {
                             bytesRead = buffer.length;
                         }
                         else{  // data in multiple blocks
-                            System.out.println("tempBuffer " + tempBuffer);
-                            System.out.println("readLength " + readLength);
-                            System.out.println("tempBlock " + tempBlock.length);
-                            System.out.println("BufferLength " + buffer.length);
                             System.arraycopy(tempBlock, fd.seekPtr,
                                     buffer, tempBuffer, readLength);
                             bytesRead += readLength;
@@ -118,7 +114,6 @@ public class FileSystem {
                         }
                         buffersize = buffersize + readLength - 1;
                         tempBuffer += readLength;
-                        seek(fd, readLength, SEEK_CUR);
                     }
 
                     if (fd.count > 0) {
@@ -128,7 +123,6 @@ public class FileSystem {
                     if (fd.count > 0) {
                         notify();
                     }
-                    System.out.println("bytesRead " + bytesRead);
                     return bytesRead;
             }
         }
