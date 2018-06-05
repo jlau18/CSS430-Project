@@ -207,6 +207,7 @@ public class Kernel
 					  if (ftEnt == null || fs.close(ftEnt) == -1) {
 						  return ERROR;
 					  }
+					  myTcb.returnFd(param);
 					  return OK;
 				  }
                   return ERROR;

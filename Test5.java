@@ -436,15 +436,12 @@ class Test5 extends Thread {
 
     for ( short i = 0; i < 24; i++ )
       buf24[i] = ( byte )( 24 - i );
-    System.out.println("fd " + fd);
     fd = SysLib.open( "bothell", "w+" );
     SysLib.seek( fd, 512 * 12 - 3, 0 );
     SysLib.write( fd, buf24 );
-    System.out.println("seek and write");
     SysLib.seek( fd, 0, 0 );
     byte[] tmpBuf = new byte[6688];
     SysLib.read( fd, tmpBuf );
-    System.out.println("seak and read");
     for ( int i = 0; i < 512 * 12 - 3; i++ )
       if ( tmpBuf[i] != buf6656[i] ) {
         SysLib.cout( "tmpBuf[" + i + "]=" + tmpBuf[i] + " (wrong)\n" );

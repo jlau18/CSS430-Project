@@ -55,7 +55,6 @@ public class FileSystem {
             if(fd.count > 0) fd.count--;
 
             if (fd.count == 0) {
-                fd.inode.toDisk(fd.iNumber);
                 if(filetable.ffree(fd)){
                     return 0;
                 }
@@ -106,12 +105,6 @@ public class FileSystem {
                             bytesRead = buffer.length;
                         }
                         else{  // data in multiple blocks
-                            System.out.println("seekPtr " + fd.seekPtr);
-                            System.out.println("tempBuffer " + tempBuffer);
-                            System.out.println("readLength " + readLength);
-                            System.out.println("tempBlock " + tempBlock.length);
-                            System.out.println("BufferLength " + buffer.length);
-
                             System.arraycopy(tempBlock, fd.seekPtr%512,
                                     buffer, tempBuffer, readLength);
                             bytesRead += readLength;
@@ -170,7 +163,6 @@ public class FileSystem {
                             fd.inode.toDisk(fd.iNumber);
                         }
                         int bytesLeft = buffer.length - bytesWritten;
-
                         // block not available yet
                         if (blockNum == -1 || (bytesWritten % Disk.blockSize >
                                 0 && bytesLeft > 0)) {
@@ -187,7 +179,6 @@ public class FileSystem {
 
                             fd.inode.toDisk(fd.iNumber);
                         }
-
                         SysLib.rawread(blockNum, tempBlock);
 
                          int bytesToWrite;
@@ -202,7 +193,7 @@ public class FileSystem {
                                 blockOffset, bytesToWrite);
                         SysLib.rawwrite(blockNum, tempBlock);
 
-                        blockNum++;
+                        blockNum = (short)superblock.nextFreeBlock();
                         bytesWritten += bytesToWrite;
                         fd.seekPtr += bytesToWrite;
                         blockOffset = 0;

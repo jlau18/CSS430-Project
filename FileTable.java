@@ -20,7 +20,8 @@ public class FileTable {
         while(true){
             // get inumber from inode
             if(filename.equals("/")){ iNumber = (short) 0; }
-            else { iNumber = dir.namei(filename); }
+            else {
+		iNumber = dir.namei(filename); }
             // if inode exist
             if(iNumber >= 0 && iNumber < dir.maxFiles()){
                 inode = new Inode(iNumber);
@@ -61,7 +62,7 @@ public class FileTable {
         }
 
         // increment inode count for num users
-        inode.count++;
+	inode.count++;
         inode.toDisk(iNumber);
         FileTableEntry entry = new FileTableEntry(inode,iNumber,mode);
         table.addElement(entry);
@@ -69,23 +70,21 @@ public class FileTable {
     }
 
     public synchronized boolean ffree( FileTableEntry e ) {
-        if(table.remove(e)){ // removes if in table
+        e.inode.count -= 1; // decrease user count
+        if(e.inode.count == 0){
+            this.table.remove(e);
             if(e.inode.flag == read){
-                if(e.inode.count == 1){
-                    e.inode.flag = used;
-                    notify();
-                }
+                e.inode.flag = used;
+                notify();
             }
             else if(e.inode.flag == write){
                 e.inode.flag = used;
                 notifyAll();
             }
-
-            e.inode.count -= 1; // decrease user count
             e.inode.toDisk(e.iNumber); // saves to disk
             return true;
         }
-        else return false;
+        return false;
     }
 
     public synchronized boolean fempty( ) {

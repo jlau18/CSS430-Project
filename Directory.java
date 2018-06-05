@@ -70,6 +70,7 @@ public class Directory {
 					fnames[i][j] = nameAsArr[j];
 				}
 				fsize[i] = filename.length();
+				short test = (short) i;
 				return (short) i;
 			}
 		}
