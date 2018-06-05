@@ -46,7 +46,7 @@ public class Inode {
 		
 	}
 
-	int toDisk( short iNumber ) {                  // save to disk as the i-th inode
+	int toDisk( short iNumber ) {   // save to disk as the i-th inode
 		int blockNum = (iNumber / 16) + 1;
 		int offset = iNumber % 16 * iNodeSize;
 		byte[] iNodeData = new byte[blockSize];
@@ -88,6 +88,9 @@ public class Inode {
 		if (blockNum < directSize) {
 			return direct[blockNum];
 		} else {
+			if(indirect == -1){
+				return -1;
+			}
 			byte[] indirectPointers = new byte[blockSize];
 			SysLib.rawread(indirect, indirectPointers);
 			int slotInIndirect = (blockNum - directSize) * 2;

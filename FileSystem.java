@@ -66,7 +66,6 @@ public class FileSystem {
 
 
     public int read(FileTableEntry fd, byte[] buffer){
-        System.out.println("seekPtr read " + fd.seekPtr);
         int bytesRead= 0;
         int readLength = 0;
         while (true) {
@@ -78,18 +77,14 @@ public class FileSystem {
                     fd.inode.flag = Inode.READ;
                     byte[] tempBlock = new byte[Disk.blockSize];
                     int tempBuffer = 0;
-
                     while (bytesRead < buffer.length) {
-                        int blockNum = fd.inode.findTargetBlock(
-                                fd.seekPtr/ Disk.blockSize);
-
+                        int blockNum = fd.inode.findTargetBlock(fd.seekPtr);
                         if (blockNum == -1) {
                             return -1;
                         }
                         if (SysLib.rawread(blockNum, tempBlock) == -1) {
                             return -1;
                         }
-
                         boolean lastBlock = ((
                                 buffer.length - tempBuffer) < Disk.blockSize);
 
@@ -99,7 +94,6 @@ public class FileSystem {
                         else{
                             readLength = Disk.blockSize;
                         }
-
                         if (readLength < (512 - fd.seekPtr)){
                             System.arraycopy(tempBlock, fd.seekPtr,
                                     buffer, tempBuffer,readLength);
@@ -124,12 +118,15 @@ public class FileSystem {
 
 
     public int write(FileTableEntry fd, byte[] buffer){
-        System.out.println("seekPtr write " + fd.seekPtr);
         if (fd == null || fd.mode == "r")
         {
             return -1;
         }
-        short blockNum = (short)fd.inode.findTargetBlock(fd.seekPtr/ Disk.blockSize);
+        int blockNum = fd.inode.findTargetBlock(fd.seekPtr);
+        if(blockNum == -1){
+            fd.inode.setIndexBlock((short)superblock.nextFreeBlock());
+            blockNum = fd.inode.findTargetBlock(fd.seekPtr);
+        }
         int bytesWritten = 0;
         int blockOffset = fd.seekPtr % Disk.blockSize;
         while (true) {
@@ -164,21 +161,19 @@ public class FileSystem {
                         // block not available yet
                         if (blockNum == -1 || (bytesWritten % Disk.blockSize >
                                 0 && bytesLeft > 0)) {
-
                             blockNum = (short)superblock.nextFreeBlock();
 
                             if (blockNum == -1) { // no space
                                 return -1;
                             }
                             //sets new block so it knows where rest of file goes
-                            if (!fd.inode.setNextBlockNumber(blockNum)){
+                            if (!fd.inode.setNextBlockNumber((short)blockNum)){
                                 return -1;
                             }
 
                             fd.inode.toDisk(fd.iNumber);
                         }
                         SysLib.rawread(blockNum, tempBlock);
-                        System.out.println("Block Num : " + blockNum);
                          int bytesToWrite;
                          if(bytesLeft < (Disk.blockSize - blockOffset)){
                             bytesToWrite = bytesLeft;
@@ -189,7 +184,6 @@ public class FileSystem {
                         System.arraycopy(buffer, bytesWritten, tempBlock,
                                 blockOffset, bytesToWrite);
                         SysLib.rawwrite(blockNum, tempBlock);
-
                         blockNum = (short)superblock.nextFreeBlock();
                         bytesWritten += bytesToWrite;
                         fd.seekPtr += bytesToWrite;
