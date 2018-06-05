@@ -66,6 +66,7 @@ public class FileSystem {
 
 
     public int read(FileTableEntry fd, byte[] buffer){
+        System.out.println("seekPtr read " + fd.seekPtr);
         int bytesRead= 0;
         int readLength = 0;
         while (true) {
@@ -116,10 +117,6 @@ public class FileSystem {
                     if (fd.count > 0) {
                         fd.count--;
                     }
-
-                    if (fd.count > 0) {
-                        notify();
-                    }
                     return bytesRead;
             }
         }
@@ -127,6 +124,7 @@ public class FileSystem {
 
 
     public int write(FileTableEntry fd, byte[] buffer){
+        System.out.println("seekPtr write " + fd.seekPtr);
         if (fd == null || fd.mode == "r")
         {
             return -1;
@@ -180,7 +178,7 @@ public class FileSystem {
                             fd.inode.toDisk(fd.iNumber);
                         }
                         SysLib.rawread(blockNum, tempBlock);
-
+                        System.out.println("Block Num : " + blockNum);
                          int bytesToWrite;
                          if(bytesLeft < (Disk.blockSize - blockOffset)){
                             bytesToWrite = bytesLeft;
@@ -188,7 +186,6 @@ public class FileSystem {
                          else{
                             bytesToWrite = Disk.blockSize - blockOffset;
                         }
-
                         System.arraycopy(buffer, bytesWritten, tempBlock,
                                 blockOffset, bytesToWrite);
                         SysLib.rawwrite(blockNum, tempBlock);
