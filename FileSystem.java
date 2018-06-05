@@ -145,6 +145,7 @@ public class FileSystem {
                 default:
                     fd.inode.flag = Inode.WRITE;
                     short inodeOffset = (short)(fd.seekPtr/ Disk.blockSize);
+
                     while (bytesWritten < buffer.length) {
                         byte[] tempBlock = new byte[Disk.blockSize];
                         if (inodeOffset >= Inode.numDirectPointers() - 1 &&
@@ -162,7 +163,6 @@ public class FileSystem {
                         if (blockNum == -1 || (bytesWritten % Disk.blockSize >
                                 0 && bytesLeft > 0)) {
                             blockNum = (short)superblock.nextFreeBlock();
-
                             if (blockNum == -1) { // no space
                                 return -1;
                             }

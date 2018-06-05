@@ -370,8 +370,6 @@ class Test5 extends Thread {
       if ( tmpBuf[i] != buf32[i - 6656] ) {
         SysLib.cout( "buf[" + i + "] = " + tmpBuf[i] + " buf32 = " +
            buf32[i - 6656] + "\n" );
-        System.out.println( "buf[" + (i + 1) + "] = " + tmpBuf[i + 1] + " buf32 = " +
-                buf32[i - 6655] + "\n" );
         SysLib.close( fd );
         return false;
       }
